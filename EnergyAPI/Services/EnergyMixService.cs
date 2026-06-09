@@ -15,7 +15,7 @@ public class EnergyMixService : IEnergyMixService
     {
         var today = DateTime.UtcNow.Date;
 
-        var data = await _carbonIntensity.GetGenerationAsync(today, today.AddDays(2));
+        var data = await _carbonIntensity.GetGenerationAsync(today, today.AddDays(3));
 
         var cleanFuels = new[] { "biomass", "nuclear", "hydro", "wind", "solar" };
 
