@@ -1,3 +1,11 @@
 @EnergyAPI_HostAddress = http://localhost:5197
 
+GET {{EnergyAPI_HostAddress}}/api/energy/mix
+Accept: application/json
+
+###
+
+GET {{EnergyAPI_HostAddress}}/api/energy/chwindow?hours=3
+Accept: application/json
+
 ###
