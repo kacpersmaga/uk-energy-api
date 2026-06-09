@@ -30,7 +30,7 @@ public class ChargingWindowService : IChargingWindowService
                 .Select(d => d.Generationmix.Where(f => cleanFuels.Contains(f.Fuel)).Sum(f => f.Perc))
                 .Average();
 
-            if (windowCleanPercentage >= bestCleanPercentage)
+            if (windowCleanPercentage > bestCleanPercentage)
             {
                 bestCleanPercentage = windowCleanPercentage;
                 bestIndex = i;
