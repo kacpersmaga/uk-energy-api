@@ -14,10 +14,8 @@ public class EnergyMixService : IEnergyMixService
     public async Task<List<DailyEnergyMix>> GetThreeDayMixAsync()
     {
         var today = DateTime.UtcNow.Date;
-
+        
         var data = await _carbonIntensity.GetGenerationAsync(today, today.AddDays(3));
-
-        var cleanFuels = new[] { "biomass", "nuclear", "hydro", "wind", "solar" };
 
         return data.Data
             .GroupBy(interval => DateOnly.FromDateTime(interval.From))
@@ -29,7 +27,7 @@ public class EnergyMixService : IEnergyMixService
                     .Select(g => new FuelMix(g.Key, g.Average(f => f.Perc)))
                     .ToList();
 
-                var cleanPercentage = fuels.Where(f => cleanFuels.Contains(f.Fuel)).Sum(f => f.Perc);
+                var cleanPercentage = EnergyConstants.CleanPercentage(fuels);
 
                 return new DailyEnergyMix(dayGroup.Key, fuels, cleanPercentage);
             })

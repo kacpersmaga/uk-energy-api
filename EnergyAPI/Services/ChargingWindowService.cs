@@ -20,14 +20,12 @@ public class ChargingWindowService : IChargingWindowService
         double bestCleanPercentage = 0;
         int bestIndex = 0;
 
-        var cleanFuels = new[] { "biomass", "nuclear", "hydro", "wind", "solar" };
-
         for (int i = 0; i <= data.Data.Count - windowSize; i++)
         {
             var windowCleanPercentage = data.Data
                 .Skip(i)
                 .Take(windowSize)
-                .Select(d => d.Generationmix.Where(f => cleanFuels.Contains(f.Fuel)).Sum(f => f.Perc))
+                .Select(d => EnergyConstants.CleanPercentage(d.Generationmix))
                 .Average();
 
             if (windowCleanPercentage > bestCleanPercentage)
