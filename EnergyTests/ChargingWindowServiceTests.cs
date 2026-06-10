@@ -108,4 +108,69 @@ public class ChargingWindowServiceTests
         Assert.Equal(start, result.Start);
         Assert.Equal(start.AddHours(1), result.End);
     }
+
+    [Fact]
+    public async Task GetOptimalWindowAsync_WhenNoCleanFuels_ReturnsZeroCleanPercentage()
+    {
+        var start = DateTime.Today;
+
+        _mock.GetGenerationAsync(Arg.Any<DateTime>(), Arg.Any<DateTime>())
+            .Returns(new GenerationResponse(
+            [
+                new GenerationInterval(start, start.AddMinutes(30),
+                    [new FuelMix("gas", 100)]),
+                new GenerationInterval(start.AddMinutes(30), start.AddHours(1),
+                    [new FuelMix("gas", 100)]),
+            ]));
+
+        var result = await _service.GetOptimalWindowAsync(hours: 1);
+
+        Assert.Equal(0, result.AverageCleanEnergy);
+        Assert.Equal(start, result.Start);
+        Assert.Equal(start.AddHours(1), result.End);
+    }
+
+    [Fact]
+    public async Task GetOptimalWindowAsync_WindowCanSpanAcrossDays()
+    {
+        // last slot of day 1 and first slot of day 2 are both very clean
+        var day1End = DateTime.Today.AddDays(1).AddHours(23).AddMinutes(30);
+        var day2Start = DateTime.Today.AddDays(2);
+
+        _mock.GetGenerationAsync(Arg.Any<DateTime>(), Arg.Any<DateTime>())
+            .Returns(new GenerationResponse(
+            [
+                new GenerationInterval(day1End, day1End.AddMinutes(30),
+                    [new FuelMix("wind", 90), new FuelMix("gas", 10)]),
+                new GenerationInterval(day2Start, day2Start.AddMinutes(30),
+                    [new FuelMix("wind", 95), new FuelMix("gas", 5)]),
+                new GenerationInterval(day2Start.AddMinutes(30), day2Start.AddHours(1),
+                    [new FuelMix("wind", 5), new FuelMix("gas", 95)]),
+            ]));
+
+        var result = await _service.GetOptimalWindowAsync(hours: 1);
+
+        Assert.Equal(day1End, result.Start);
+        Assert.Equal(day2Start.AddMinutes(30), result.End);
+        Assert.Equal(92.5, result.AverageCleanEnergy, precision: 3);
+    }
+
+    [Fact]
+    public async Task GetOptimalWindowAsync_WhenNotEnoughDataForRequestedHours_Throws()
+    {
+        // 2 hours = 4 intervals, but only 2 are returned — documents out-of-range behavior on a partial API outage
+        var start = DateTime.Today;
+
+        _mock.GetGenerationAsync(Arg.Any<DateTime>(), Arg.Any<DateTime>())
+            .Returns(new GenerationResponse(
+            [
+                new GenerationInterval(start, start.AddMinutes(30),
+                    [new FuelMix("wind", 50), new FuelMix("gas", 50)]),
+                new GenerationInterval(start.AddMinutes(30), start.AddHours(1),
+                    [new FuelMix("wind", 50), new FuelMix("gas", 50)]),
+            ]));
+
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(
+            async () => await _service.GetOptimalWindowAsync(hours: 2));
+    }
 }
