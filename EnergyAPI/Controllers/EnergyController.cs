@@ -19,8 +19,15 @@ public class EnergyController : ControllerBase
     [HttpGet("mix")]
     public async Task<IActionResult> GetEnergyMix()
     {
-        var result = await _energyMixService.GetThreeDayMixAsync();
-        return Ok(result);
+        try
+        {
+            var result = await _energyMixService.GetThreeDayMixAsync();
+            return Ok(result);
+        }
+        catch (HttpRequestException)
+        {
+            return StatusCode(502, "External energy API is currently unavailable.");
+        }
     }
 
     [HttpGet("chwindow")]
@@ -29,7 +36,14 @@ public class EnergyController : ControllerBase
         if (hours < 1 || hours > 6)
             return BadRequest("Hours must be between 1 and 6.");
 
-        var result = await _chargingWindowService.GetOptimalWindowAsync(hours);
-        return Ok(result);
+        try
+        {
+            var result = await _chargingWindowService.GetOptimalWindowAsync(hours);
+            return Ok(result);
+        }
+        catch (HttpRequestException)
+        {
+            return StatusCode(502, "External energy API is currently unavailable.");
+        }
     }
 }
