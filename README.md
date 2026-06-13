@@ -4,6 +4,11 @@
 
 `dotnet run` (port 5197) · `dotnet test`
 
+## Links
+
+- **Live application:** https://energy-mix-frontend-0ru0.onrender.com/
+- **Frontend repository:** https://github.com/kacpersmaga/energy-mix-frontend
+
 ## Design decisions
 
 - **Two endpoints fetch independently.** `/chwindow` pulls fresh data rather than reusing `/mix`, so both always reflect the latest forecast.
